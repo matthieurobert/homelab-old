@@ -26,6 +26,7 @@ services:
       - "--api=true"
       - "--api.dashboard=true"
       - "--providers.docker=true"
+      - "--metrics.prometheus=true"
       - "--entrypoints.websecure.address=:443"
       - "--certificatesresolvers.homelab.acme.tlschallenge=true"
       - "--certificatesresolvers.homelab.acme.email=loangayrard@gmail.com"
@@ -47,7 +48,7 @@ services:
       - monitoring
 
   cadvisor:
-    image: gcr.io/cadvisor/cadvisor:v0.36.0
+    image: gcr.io/cadvisor/cadvisor:v0.47.2
     container_name: cadvisor
     volumes:
       - /:/rootfs:ro
@@ -141,6 +142,8 @@ services:
       - "traefik.http.routers.homeassistant.entrypoints=websecure"
       - "traefik.http.services.homeassistant.loadbalancer.server.port=8123"
       - "traefik.http.routers.homeassistant.tls.certresolver=homelab"
+    devices:
+      - /dev/serial/by-id:/dev/serial/by-id
 
 volumes:
   postgres-data:
