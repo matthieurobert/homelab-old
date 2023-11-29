@@ -29,7 +29,7 @@ services:
       - "--metrics.prometheus=true"
       - "--entrypoints.websecure.address=:443"
       - "--certificatesresolvers.homelab.acme.tlschallenge=true"
-      - "--certificatesresolvers.homelab.acme.email=loangayrard@gmail.com"
+      - "--certificatesresolvers.homelab.acme.email=matthieurobert82@gmail.com"
       - "--certificatesresolvers.homelab.acme.storage=/letsencrypt/acme.json"
     labels:
       - "traefik.http.routers.api.rule=Host (`traefik.$DOMAIN_NAME`)"
