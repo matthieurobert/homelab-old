@@ -1,0 +1,12 @@
+---
+- name: Download k0s on nodes
+  hosts: single
+  become: true
+  roles:
+    - k0s_download
+
+- name: Configure k0s single node
+  hosts: single
+  become: true
+  roles:
+    - k0s_single

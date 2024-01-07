@@ -1,0 +1,55 @@
+---
+- name: Check if k0s controller service exists
+  stat:
+    path: /etc/systemd/system/k0scontroller.service
+  register: controller_service_exists
+
+- name: Create k0s single node
+  register: single_node_cmd
+  command: k0s install controller --single
+  changed_when: single_node_cmd | length > 0
+  when: not controller_service_exists.stat.exists
+
+- name: Check is k0s service is running
+  ansible.builtin.systemd_service:
+    state: started
+    name: k0scontroller
+  register: controller_service_started
+
+- name: Start k0s node
+  command: k0s start
+  when: controller_service_started.changed
+
+- name: Wait for k8s apiserver
+  wait_for:
+    host: localhost
+    port: 6443
+    delay: 15
+    timeout: 180
+  when: controller_service_started.changed
+
+- name: Copy config file to user home directory
+  copy:
+    src: "{{ k0s_single_k0s_data_dir }}/pki/admin.conf"
+    dest: ~{{ ansible_user }}/{{ project }}-kubeconfig.yml
+    remote_src: yes
+    owner: "{{ ansible_user }}"
+    mode: 0644
+
+- name: Set controller IP in kubeconfig
+  replace:
+    path: ~{{ ansible_user }}/{{ project }}-kubeconfig.yml
+    regexp: 'localhost'
+    replace: "{{ ansible_host }}"
+
+- name: Copy kubeconfig
+  fetch:
+    src: "~{{ ansible_user }}/{{ project }}-kubeconfig.yml"
+    dest: "~/.kube/config/{{ project }}-kubeconfig.yml"
+    flat: yes
+    validate_checksum: no
+  become: false
+
+- name: "print kubeconfig command"
+  debug:
+    msg: "To use Cluster: export KUBECONFIG=~/.kube/config/{{ project }}-kubeconfig.yml"

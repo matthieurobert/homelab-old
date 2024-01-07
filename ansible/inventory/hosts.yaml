@@ -1,0 +1,12 @@
+---
+all:
+  children:
+    single:
+      hosts:
+        ovh-vps:
+  hosts:
+    ovh-vps:
+      ansible_host: 162.19.27.12
+      project: k0s-ovh
+  vars:
+    ansible_user: debian
