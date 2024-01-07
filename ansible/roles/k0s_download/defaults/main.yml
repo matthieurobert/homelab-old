@@ -1,0 +1,4 @@
+---
+# defaults file for k0s_single
+k0s_download_k0s_version: v1.27.5+k0s.0
+k0s_download_k0s_binary_dest: /usr/local/bin/k0s

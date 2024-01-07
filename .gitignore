@@ -1,4 +1,8 @@
 .env
 
+.vscode
+
 letsencrypt/
 homeassistant/config
+
+artifacts
