@@ -1,0 +1,29 @@
+---
+- name: Add openebs helm repository
+  kubernetes.core.helm_repository:
+    name: openebs
+    repo_url: https://openebs.github.io/charts
+    kubeconfig: "~/.kube/config/{{ project }}-kubeconfig.yml"
+  delegate_to: localhost
+
+- name: Deploy openebs chart
+  kubernetes.core.helm:
+    name: openebs
+    chart_ref: openebs/openebs
+    chart_version: "{{ openebs_chart_version }}"
+    release_namespace: openebs
+    kubeconfig: "~/.kube/config/{{ project }}-kubeconfig.yml"
+    create_namespace: true
+  delegate_to: localhost
+
+- name: Set default storageclass to openebs-hostpath
+  kubernetes.core.k8s:
+    state: patched
+    kind: StorageClass
+    name: openebs-hostpath
+    definition:
+      metadata:
+        annotations:
+          storageclass.kubernetes.io/is-default-class: "true"
+  delegate_to: localhost
+

@@ -10,3 +10,8 @@
   become: true
   roles:
     - k0s_single
+
+- name: Deploy base k8s components
+  hosts: single
+  roles:
+    - openebs
