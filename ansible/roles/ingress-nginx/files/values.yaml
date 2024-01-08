@@ -1,0 +1,8 @@
+controller:
+  ingressClassResource:
+    default: true
+  extraArgs:
+    enable-ssl-passthrough: true
+  hostNetwork: true
+  service:
+    type: NodePort

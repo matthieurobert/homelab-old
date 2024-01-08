@@ -21,6 +21,7 @@
     state: patched
     kind: StorageClass
     name: openebs-hostpath
+    kubeconfig: "~/.kube/config/{{ project }}-kubeconfig.yml"
     definition:
       metadata:
         annotations:
