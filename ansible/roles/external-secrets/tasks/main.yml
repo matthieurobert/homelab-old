@@ -1,0 +1,17 @@
+---
+- name: Add external-secrets helm repository
+  kubernetes.core.helm_repository:
+    name: external-secrets
+    repo_url: https://charts.external-secrets.io
+    kubeconfig: "~/.kube/config/{{ project }}-kubeconfig.yml"
+  delegate_to: localhost
+
+- name: Deploy external-secrets chart
+  kubernetes.core.helm:
+    name: external-secrets
+    chart_ref: external-secrets/external-secrets
+    chart_version: "{{ external_secrets_chart_version }}"
+    release_namespace: external-secrets
+    kubeconfig: "~/.kube/config/{{ project }}-kubeconfig.yml"
+    create_namespace: true
+  delegate_to: localhost
