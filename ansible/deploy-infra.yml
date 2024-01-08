@@ -16,3 +16,4 @@
   roles:
     - openebs
     - ingress-nginx
+    - cert-manager
