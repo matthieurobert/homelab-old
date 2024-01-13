@@ -18,3 +18,4 @@
     - ingress-nginx
     - cert-manager
     - external-secrets
+    - vault

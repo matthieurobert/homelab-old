@@ -1,0 +1,87 @@
+- name: Configure deploy policy in Vault
+  uri:
+    url: "http://vault.{{ domain_name }}/v1/sys/policy/deploy"
+    method: POST
+    headers:
+      Content-Type: "application/json"
+      X-Vault-Token: "{{ vault_crendentials.root_token }}"
+    body: '{"policy": "path \"deploy/\" { capabilities = [\"read\", \"list\"] }"}'
+    status_code: 
+      - 200
+      - 204
+    validate_certs: no
+  register: result
+
+- name: Create deploy approle in Vault
+  uri:
+    url: "http://vault.{{ domain_name }}/v1/auth/approle/role/deploy"
+    method: POST
+    headers:
+      Content-Type: "application/json"
+      X-Vault-Token: "{{ vault_crendentials.root_token }}"
+    body: '{"policies": "deploy"}'
+    status_code: 
+      - 200
+      - 204
+    validate_certs: no
+  register: result
+
+- name: Fetch deploy approle role-id
+  uri:
+    url: "http://vault.{{ domain_name }}/v1/auth/approle/role/deploy/role-id"
+    method: GET
+    headers:
+      Content-Type: "application/json"
+      X-Vault-Token: "{{ vault_crendentials.root_token }}"
+    status_code: 
+      - 200
+      - 204
+    validate_certs: no
+  register: result_role
+
+- name: Set role-id
+  ansible.builtin.set_fact:
+    role_id: "{{ result_role.json.data.role_id }}"
+
+- name: Create deploy approle vault secret
+  uri:
+    url: "http://vault.{{ domain_name }}/v1/auth/approle/role/deploy/secret-id"
+    method: POST
+    headers:
+      Content-Type: "application/json"
+      X-Vault-Token: "{{ vault_crendentials.root_token }}"
+    status_code: 
+      - 200
+      - 204
+    validate_certs: no
+  register: result_secret
+
+- name: Set secret_id
+  ansible.builtin.set_fact:
+    secret_id: "{{ result_secret.json.data.secret_id }}"
+
+- name: Generate deploy-vault-secret secret file
+  ansible.builtin.template:
+    src: deploy-vault-secret.yml.j2
+    dest: /tmp/deploy-vault-secret.yml
+  delegate_to: localhost
+
+- name: Create deploy approle k8s secret
+  kubernetes.core.k8s:
+    state: present
+    src: /tmp/deploy-vault-secret.yml
+    kubeconfig: "~/.kube/config/{{ project }}-kubeconfig.yml"
+  delegate_to: localhost
+
+- name: Generate vault-secret-store config file
+  ansible.builtin.template:
+    src: vault-secret-store.yml.j2
+    dest: /tmp/vault-secret-store.yml
+  delegate_to: localhost
+
+- name: Create vault secret store
+  kubernetes.core.k8s:
+    state: present
+    src: /tmp/vault-secret-store.yml
+    kubeconfig: "~/.kube/config/{{ project }}-kubeconfig.yml"
+  delegate_to: localhost

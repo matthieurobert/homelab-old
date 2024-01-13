@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: internal-vault-ingress
+  namespace: vault
+  annotations:
+    nginx.ingress.kubernetes.io/whitelist-source-range: "{{ ansible_host }}/8" 
+spec:
+  rules:
+  - host: vault.{{ domain_name }}
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: vault
+            port:
+              number: 8200

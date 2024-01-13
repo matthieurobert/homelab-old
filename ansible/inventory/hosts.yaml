@@ -11,3 +11,4 @@ all:
     ovh-vps:
       ansible_host: 162.19.27.12
       project: k0s-ovh
+      domain_name: dev.mrobert.fr
