@@ -1,0 +1,15 @@
+server:
+  ingress:
+    enabled: true
+    annotations:
+      cert-manager.io/cluster-issuer: "letsencrypt-prod"
+      nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+    ingressClassName: "nginx"
+    hosts:
+      - argocd.{{ domain_name }}
+    
+    tls:
+      - secretName: argocd.{{ domain_name }}-tls
+        hosts:
+          - argocd.{{ domain_name }}
+    https: true

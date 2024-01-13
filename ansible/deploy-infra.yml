@@ -19,3 +19,4 @@
     - cert-manager
     - external-secrets
     - vault
+    - argocd
