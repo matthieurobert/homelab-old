@@ -21,12 +21,12 @@
 - name: Generate cluster-issuer config file
   ansible.builtin.template:
     src: cluster-issuer.yaml.j2
-    dest: cluster-issuer.yaml
+    dest: /tmp/cluster-issuer.yaml
   delegate_to: localhost
 
 - name: Apply cluster-issuer config
   kubernetes.core.k8s:
     state: present
-    src: cluster-issuer.yaml
+    src: /tmp/cluster-issuer.yaml
     kubeconfig: "~/.kube/config/{{ project }}-kubeconfig.yml"
   delegate_to: localhost
