@@ -1,0 +1,22 @@
+---
+- name: "Check seal status of vault-0"
+  kubernetes.core.k8s_exec:
+    namespace: vault
+    pod: "vault-0"
+    command: vault status
+    kubeconfig: "~/.kube/config/{{ project }}-kubeconfig.yml"
+  register: vault_pod_unseal_status
+  failed_when: vault_pod_unseal_status.rc != 0 and vault_pod_unseal_status.rc != 2
+  delegate_to: localhost
+
+- name: "Unseal vault-0"
+  kubernetes.core.k8s_exec:
+    namespace: vault
+    pod: "vault-0"
+    command: vault operator unseal {{ unseal_key_hex }}
+    kubeconfig: "~/.kube/config/{{ project }}-kubeconfig.yml"
+  delegate_to: localhost
+  when: vault_pod_unseal_status.rc == 2
+  with_items: "{{ vault_unseal_keys[:3] }}"
+  loop_control:
+    loop_var: unseal_key_hex

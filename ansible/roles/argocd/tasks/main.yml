@@ -1,0 +1,26 @@
+---
+# tasks file for argocd
+- name: Add argo helm repository
+  kubernetes.core.helm_repository:
+    name: argo
+    repo_url: https://argoproj.github.io/argo-helm
+    kubeconfig: "~/.kube/config/{{ project }}-kubeconfig.yml"
+  delegate_to: localhost
+
+- name: Generate argocd values files
+  ansible.builtin.template:
+    src: values.yaml.j2
+    dest: /tmp/argocd-values.yaml.yaml
+  delegate_to: localhost
+
+- name: Deploy argocd chart
+  kubernetes.core.helm:
+    name: argocd
+    chart_ref: argo/argo-cd
+    chart_version: "{{ argocd_chart_version }}"
+    release_namespace: argocd
+    kubeconfig: "~/.kube/config/{{ project }}-kubeconfig.yml"
+    create_namespace: true
+    values_files:
+      - /tmp/argocd-values.yaml.yaml
+  delegate_to: localhost

@@ -1,0 +1,74 @@
+---
+# tasks file for vault
+- name: Get vault-infos
+  kubernetes.core.helm_info:
+    name: vault
+    release_namespace: vault
+    kubeconfig: "~/.kube/config/{{ project }}-kubeconfig.yml"
+  register: vault_info
+  delegate_to: localhost
+
+- name: Check if vault is already installed
+  ansible.builtin.set_fact:
+    vault_is_installed: "{% if 'status' in vault_info %}true{% else %}false{% endif %}"
+  delegate_to: localhost
+
+- name: Add hashicorp helm repository
+  kubernetes.core.helm_repository:
+    name: hashicorp
+    repo_url: https://helm.releases.hashicorp.com
+    kubeconfig: "~/.kube/config/{{ project }}-kubeconfig.yml"
+  delegate_to: localhost
+
+- name: Deploy vault chart
+  kubernetes.core.helm:
+    name: vault
+    chart_ref: hashicorp/vault
+    chart_version: "{{ vault_chart_version }}"
+    release_namespace: vault
+    kubeconfig: "~/.kube/config/{{ project }}-kubeconfig.yml"
+    create_namespace: true
+  delegate_to: localhost
+  when: not vault_is_installed
+
+- name: Wait vault pod
+  kubernetes.core.k8s_info:
+    kind: pod
+    name: "vault-0"
+    namespace: vault
+    kubeconfig: "~/.kube/config/{{ project }}-kubeconfig.yml"
+  register: result
+  until: result.resources[0].status.phase == "Running"
+  retries: 5
+  delay: 30
+  delegate_to: localhost
+
+- name: Init vault
+  ansible.builtin.include_tasks: init.yml
+  when: not vault_is_installed
+
+- name: Get vault creatials
+  ansible.builtin.set_fact: 
+    vault_crendentials: "{{ lookup('file','~/.kube/config/vault/{{ project }}-vault_init.json') | from_json }}"
+
+- name: Unseal vault
+  ansible.builtin.include_tasks: unseal.yml
+
+- name: Generate internal-vault-ingress config file
+  ansible.builtin.template:
+    src: internal-vault-ingress.yml.j2
+    dest: /tmp/internal-vault-ingress.yml
+  delegate_to: localhost
+
+- name: Apply internal-vault-ingress config
+  kubernetes.core.k8s:
+    state: present
+    src: /tmp/internal-vault-ingress.yml
+    kubeconfig: "~/.kube/config/{{ project }}-kubeconfig.yml"
+  delegate_to: localhost
+
+- name: Setup Auth methods
+  ansible.builtin.include_tasks: auth.yml
+
+- name: Setup deploy approle
+  ansible.builtin.include_tasks: deploy-approle.yml

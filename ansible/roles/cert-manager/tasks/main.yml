@@ -1,0 +1,32 @@
+---
+- name: Add cert-manager helm repository
+  kubernetes.core.helm_repository:
+    name: jetstack
+    repo_url: https://charts.jetstack.io
+    kubeconfig: "~/.kube/config/{{ project }}-kubeconfig.yml"
+  delegate_to: localhost
+
+- name: Deploy cert-manager chart
+  kubernetes.core.helm:
+    name: cert-manager
+    chart_ref: jetstack/cert-manager
+    chart_version: "{{ cert_manager_chart_version }}"
+    release_namespace: cert-manager
+    kubeconfig: "~/.kube/config/{{ project }}-kubeconfig.yml"
+    create_namespace: true
+    values_files:
+      - "{{ role_path }}/files/values.yaml"
+  delegate_to: localhost
+
+- name: Generate cluster-issuer config file
+  ansible.builtin.template:
+    src: cluster-issuer.yaml.j2
+    dest: /tmp/cluster-issuer.yaml
+  delegate_to: localhost
+
+- name: Apply cluster-issuer config
+  kubernetes.core.k8s:
+    state: present
+    src: /tmp/cluster-issuer.yaml
+    kubeconfig: "~/.kube/config/{{ project }}-kubeconfig.yml"
+  delegate_to: localhost

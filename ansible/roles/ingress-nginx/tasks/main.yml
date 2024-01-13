@@ -1,0 +1,19 @@
+---
+- name: Add ingress-nginx helm repository
+  kubernetes.core.helm_repository:
+    name: ingress-nginx
+    repo_url: https://kubernetes.github.io/ingress-nginx
+    kubeconfig: "~/.kube/config/{{ project }}-kubeconfig.yml"
+  delegate_to: localhost
+
+- name: Deploy ingress-nginx chart
+  kubernetes.core.helm:
+    name: ingress-nginx
+    chart_ref: ingress-nginx/ingress-nginx
+    chart_version: "{{ ingress_nginx_chart_version }}"
+    release_namespace: ingress-nginx
+    kubeconfig: "~/.kube/config/{{ project }}-kubeconfig.yml"
+    create_namespace: true
+    values_files:
+      - "{{ role_path }}/files/values.yaml"
+  delegate_to: localhost

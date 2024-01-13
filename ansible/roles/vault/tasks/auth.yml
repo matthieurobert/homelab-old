@@ -1,0 +1,25 @@
+---
+- name: Get vault auth methods
+  uri:
+    url: "http://vault.{{ domain_name }}/v1/sys/auth"
+    method: GET
+    return_content: true
+    status_code: 200
+    headers:
+      Content-Type: "application/json"
+      X-Vault-Token: "{{ vault_crendentials.root_token }}"
+  register: vault_auth_response
+
+- name: Configure authentication methods in Vault
+  uri:
+    url: "http://vault.{{ domain_name }}/v1/sys/auth/approle"
+    method: POST
+    headers:
+      Content-Type: "application/json"
+      X-Vault-Token: "{{ vault_crendentials.root_token }}"
+    body: '{"type": "{{ item.name }}"}'
+    status_code: 200
+    validate_certs: no
+  register: result
+  when: item.path + '/' not in vault_auth_response.json.data
+  with_items: "{{ vault_auth_methods }}"
