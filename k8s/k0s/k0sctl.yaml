@@ -1,0 +1,55 @@
+apiVersion: k0sctl.k0sproject.io/v1beta1
+kind: Cluster
+metadata:
+  name: k0s-cluster
+spec:
+  hosts:
+  - ssh:
+      address: 192.168.1.46
+      user: root
+      port: 22
+      keyPath: ~/.ssh/id_rsa
+    role: controller+worker
+  - ssh:
+      address: 192.168.1.47
+      user: root
+      port: 22
+      keyPath: ~/.ssh/id_rsa
+    role: worker
+  k0s:
+    version: v1.29.2+k0s.0
+    dynamicConfig: false
+    config:
+      spec:
+        telemetry:
+          enabled: false
+        extensions:
+          helm:
+            repositories:
+            - name: metallb
+              url: https://metallb.github.io/metallb
+            - name: openebs-internal
+              url: https://openebs.github.io/charts
+            - name: ingress-nginx
+              url: https://kubernetes.github.io/ingress-nginx
+            charts:
+            - name: metallb
+              chartname: metallb/metallb
+              namespace: metallb
+            - name: ingress-nginx
+              chartname: ingress-nginx/ingress-nginx
+              namespace: ingress-nginx
+              values: |
+                controller:
+                  ingressClassResource:
+                    default: true
+            - name: openebs
+              chartname: openebs-internal/openebs
+              version: "3.9.0"
+              namespace: openebs
+              order: 1
+              values: |
+                localprovisioner:
+                  hostpathClass:
+                    enabled: true
+                    isDefaultClass: yes
