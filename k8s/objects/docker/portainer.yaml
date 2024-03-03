@@ -1,0 +1,42 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: docker
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: portainer
+  namespace: docker
+spec:
+  type: ExternalName
+  externalName: portainer.homelab.mrobert.fr
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: portainer
+  namespace: docker
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    ingress.kubernetes.io/secure-backends: "true"
+    ingress.kubernetes.io/preserve-host: "false"
+    nginx.ingress.kubernetes.io/backend-protocol: HTTPS
+    nginx.ingress.kubernetes.io/upstream-vhost: portainer.homelab.mrobert.fr
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - portainer.kube.homelab.mrobert.fr
+    secretName: portainer.kube.homelab.mrobert.fr-tls
+  rules:
+  - host: portainer.kube.homelab.mrobert.fr
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: portainer
+            port:
+              number: 443
