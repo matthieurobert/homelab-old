@@ -21,6 +21,10 @@ spec:
     dynamicConfig: false
     config:
       spec:
+        api:
+          sans:
+            - kube.komelab.mrobert.fr
+            - 90.76.213.225
         telemetry:
           enabled: false
         extensions:
